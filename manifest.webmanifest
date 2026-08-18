@@ -1,0 +1,31 @@
+{
+  "name": "BookBed — your personal library",
+  "short_name": "BookBed",
+  "description": "Import EPUB and PDF books and read them beautifully — offline, on any device.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#4f46e5",
+  "lang": "en",
+  "scope": "./",
+  "orientation": "any",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
