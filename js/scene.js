@@ -69,6 +69,10 @@ export function initScene() {
   });
 
   window.addEventListener("resize", onResize);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopScene();
+    else if (!window.__bookbedReaderOpen) resumeScene();
+  });
   run();
 }
 
