@@ -241,6 +241,19 @@ body.modal-open {
 .btn-danger:hover {
   filter: brightness(1.06);
 }
+#install-btn {
+  color: var(--brand-1);
+  border: 1.5px solid color-mix(in srgb, var(--brand-1) 45%, transparent);
+  background: color-mix(in srgb, var(--brand-1) 9%, transparent);
+}
+#install-btn:hover {
+  background: color-mix(in srgb, var(--brand-1) 16%, transparent);
+}
+@media (max-width: 420px) {
+  #install-btn {
+    padding: 10px 11px;
+  }
+}
 .search-clear {
   position: absolute;
   right: 6px;
@@ -789,11 +802,11 @@ body[data-theme="dark"] .cover-skeleton {
   margin-top: 2px;
 }
 .toast.success .toast-title::before {
-  content: "✓  ";
+  content: "âœ“  ";
   color: #22c55e;
 }
 .toast.error .toast-title::before {
-  content: "✕  ";
+  content: "âœ•  ";
   color: #e5484d;
 }
 @keyframes toastIn {
