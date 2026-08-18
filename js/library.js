@@ -59,12 +59,23 @@ export function renderLibrary() {
   empty.classList.toggle("hidden", books.length > 0 || state.search);
   grid.innerHTML = "";
   if (!books.length) {
+    const title = document.getElementById("empty-title");
+    const desc = document.getElementById("empty-desc");
+    if (state.search) {
+      title.textContent = "No matches found";
+      desc.textContent = `Nothing matches "${state.search}". Try a different title or author.`;
+    } else {
+      title.textContent = "Your library is empty";
+      desc.textContent = "Import EPUB or PDF books to start reading — they stay on your device, even offline.";
+    }
     if (!state.search && state.ready) {
       const hint = document.getElementById("empty-hint-extra");
       if (hint) hint.remove();
     }
     return;
   }
+
+  renderContinueRow();
 
   const frag = document.createDocumentFragment();
   books.forEach((book, i) => {
@@ -82,6 +93,7 @@ export function renderLibrary() {
         <img class="book-cover loading" alt="" />
         <span class="cover-shine"></span>
         <span class="cover-gloss"></span>
+        <span class="format-badge">${book.format.toUpperCase()}</span>
         ${pct > 0 ? `<span class="progress-pill">${formatPercent(pct)}</span>` : ""}
         <button class="card-menu-btn" aria-label="Book options">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
@@ -160,6 +172,41 @@ export function renderLibrary() {
     frag.appendChild(card);
   });
   grid.appendChild(frag);
+}
+
+function renderContinueRow() {
+  const row = document.getElementById("continue-row");
+  const scroll = document.getElementById("continue-scroll");
+  const inProgress = state.books
+    .map((b) => ({ book: b, pct: state.states.get(b.id)?.percentage ?? 0 }))
+    .filter((x) => x.pct > 0 && x.pct < 1)
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 8);
+  row.classList.toggle("hidden", inProgress.length === 0 || !!state.search.trim());
+  scroll.innerHTML = "";
+  for (const { book, pct } of inProgress) {
+    const el = document.createElement("div");
+    el.className = "continue-card";
+    el.innerHTML = `
+      <div class="continue-cover">
+        <img alt="" />
+        <span class="progress-pill">${formatPercent(pct)}</span>
+      </div>
+      <div class="continue-bar"><i style="width:${Math.round(pct * 100)}%"></i></div>
+      <div class="continue-name">${escapeHtml(book.title)}</div>`;
+    const img = el.querySelector("img");
+    img.src = getCoverUrl(book);
+    img.onload = () => {
+      const p = el.querySelector(".continue-cover");
+      const sk = p.querySelector(".cover-skeleton");
+      if (sk) sk.remove();
+    };
+    el.addEventListener("click", async () => {
+      const { openReader } = await import("./reader.js");
+      openReader(book.id);
+    });
+    scroll.appendChild(el);
+  }
 }
 
 async function handleCardAction(book, action) {
@@ -267,7 +314,17 @@ export function initLibrary() {
   }
 
   const searchInput = document.getElementById("search-input");
-  searchInput.addEventListener("input", () => setSearch(searchInput.value));
+  const searchClear = document.getElementById("search-clear");
+  searchInput.addEventListener("input", () => {
+    setSearch(searchInput.value);
+    searchClear.classList.toggle("hidden", !searchInput.value);
+  });
+  searchClear.addEventListener("click", () => {
+    searchInput.value = "";
+    setSearch("");
+    searchClear.classList.add("hidden");
+    searchInput.focus();
+  });
 
   const sortMenuWrap = document.getElementById("sort-menu-wrap");
   const sortBtn = document.getElementById("sort-btn");
