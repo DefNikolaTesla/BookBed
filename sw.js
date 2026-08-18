@@ -1,4 +1,4 @@
-const CACHE = "bookbed-v1";
+const CACHE = "bookbed-v2";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -76,15 +76,14 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((hit) => {
-      if (hit) return hit;
-      return fetch(request).then((res) => {
+    fetch(request)
+      .then((res) => {
         if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(request, copy));
         }
         return res;
-      });
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });
