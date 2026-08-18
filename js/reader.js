@@ -24,6 +24,7 @@ let locationsPoll = null;
 const $ = (id) => document.getElementById(id);
 
 export function openReader(bookId) {
+  window.__bookbedReaderOpen = true;
   const book = state.books.find((b) => b.id === bookId);
   if (!book) return;
   currentBook = book;
@@ -122,6 +123,7 @@ function onKey(e) {
 }
 
 function closeReader() {
+  window.__bookbedReaderOpen = false;
   if (locationsPoll) clearInterval(locationsPoll);
   locationsPoll = null;
   window.removeEventListener("keydown", onKey);
@@ -253,6 +255,7 @@ function initSlider() {
 function showSelectionBar(cfi, text) {
   if (phase !== "ready") return;
   const bar = $("selection-bar");
+  $("selection-text").textContent = text.trim().replace(/\s+/g, " ").slice(0, 90);
   bar.classList.remove("hidden");
   const chips = bar.querySelectorAll(".hl-chip");
   chips.forEach((chip) => {
@@ -301,7 +304,6 @@ function openSheet(html) {
   sheet.innerHTML = html;
   sheet.classList.remove("hidden");
   $("sheet-backdrop").classList.remove("hidden");
-  document.body.classList.add("reader-sheet-open");
 }
 function closeSheet() {
   $("sheet").classList.add("hidden");
@@ -425,6 +427,8 @@ function settingsSheetHtml() {
       <div class="font-chips">${fontBtns}</div>
     </div>
 
+    <div class="font-preview fp-${s.fontFamily}" id="font-preview" style="font-size:${s.fontSize * 0.16}px;line-height:${s.lineHeight ?? 1.7};text-align:${s.justify === false ? "left" : "justify"}">The quick brown fox jumps over the lazy dog. Reading feels better when every detail fits you.</div>
+
     <div class="setting-row">
       <div class="setting-label">Text size</div>
       <div class="slider-row">
@@ -509,13 +513,24 @@ function bindSettingsSheet() {
   const size = $("set-font-size");
   size.addEventListener("input", () => {
     $("font-size-val").textContent = `${size.value}%`;
+    $("font-preview").style.fontSize = `${Number(size.value) * 0.16}px`;
     apply({ fontSize: Number(size.value) });
   });
 
   const lh = $("set-line-height");
   lh.addEventListener("input", () => {
     $("line-height-val").textContent = (Number(lh.value) / 100).toFixed(1);
+    $("font-preview").style.lineHeight = String(Number(lh.value) / 100);
     apply({ lineHeight: Number(lh.value) / 100 });
+  });
+
+  $("sheet").querySelectorAll(".font-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      $("sheet").querySelectorAll(".font-chip").forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+      $("font-preview").className = `font-preview fp-${chip.dataset.font}`;
+      apply({ fontFamily: chip.dataset.font });
+    });
   });
 
   $("sheet").querySelectorAll(".chip[data-margin]").forEach((chip) => {
@@ -538,6 +553,7 @@ function bindSettingsSheet() {
   justify.addEventListener("click", () => {
     const next = justify.classList.contains("on") ? false : true;
     justify.classList.toggle("on", next);
+    $("font-preview").style.textAlign = next ? "justify" : "left";
     apply({ justify: next });
   });
 
