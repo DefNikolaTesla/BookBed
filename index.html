@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="BookBed — import EPUB and PDF books and read them beautifully. Offline-first, installable, yours." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BookBed" />
+    <meta name="application-name" content="BookBed" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>BookBed — your personal library</title>
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-theme="system">
+    <canvas id="scene" aria-hidden="true"></canvas>
+
+    <!-- ============ LIBRARY ============ -->
+    <div id="library-view">
+      <header id="app-header">
+        <div class="header-inner">
+          <div class="brand">
+            <span class="brand-mark" id="brand-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg>
+            </span>
+            <span class="brand-name">BookBed</span>
+          </div>
+          <div class="header-tools">
+            <label class="search-box" id="search-box">
+              <svg viewBox="0 0 24 24" class="search-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="search-input" type="text" placeholder="Search your library" autocomplete="off" />
+              <button class="search-clear hidden" id="search-clear" aria-label="Clear search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </label>
+            <div class="menu-wrap" id="sort-menu-wrap">
+              <button class="icon-btn" id="sort-btn" aria-label="Sort library">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5h10M11 9h7M11 13h4M3 17h18M3 21h6"/></svg>
+              </button>
+              <div class="dropdown hidden" id="sort-menu">
+                <button data-sort="recent">Recently added</button>
+                <button data-sort="title">Title A–Z</button>
+                <button data-sort="author">Author A–Z</button>
+                <button data-sort="progress">Progress</button>
+              </div>
+            </div>
+            <div class="menu-wrap" id="app-menu-wrap">
+              <button class="icon-btn" id="app-menu-btn" aria-label="Appearance">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+              </button>
+              <div class="dropdown hidden" id="app-menu">
+                <button data-app-theme="light">Light</button>
+                <button data-app-theme="dark">Dark</button>
+                <button data-app-theme="system">System</button>
+              </div>
+            </div>
+            <button class="btn btn-ghost hidden" id="install-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+              Install app
+            </button>
+            <button class="btn btn-primary" id="import-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+              Add books
+            </button>
+            <input type="file" id="file-input" accept=".epub,.pdf,application/epub+zip,application/pdf" multiple hidden />
+          </div>
+        </div>
+      </header>
+
+      <main class="library-main">
+        <div class="importing-bar hidden" id="importing-bar">
+          <div class="spinner"></div><span id="importing-text">Importing…</span>
+        </div>
+        <section id="continue-row" class="continue-row hidden">
+          <h2 class="section-title">Continue reading</h2>
+          <div class="continue-scroll" id="continue-scroll"></div>
+        </section>
+        <div id="book-grid" class="book-grid"></div>
+
+        <div id="empty-state" class="empty-state hidden">
+          <div class="empty-art">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <h2 id="empty-title">Your library is empty</h2>
+          <p id="empty-desc">Import EPUB or PDF books to start reading — they stay on your device, even offline.</p>
+          <button class="btn btn-primary btn-lg" id="empty-import-btn">Add your first book</button>
+          <p class="empty-hint">or drag &amp; drop files anywhere</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- ============ READER ============ -->
+    <div id="reader-view" class="hidden">
+      <div class="reader-topbar">
+        <button class="icon-btn" id="reader-back" aria-label="Back to library">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+        <div class="reader-title-wrap">
+          <div class="reader-title" id="reader-title"></div>
+          <div class="reader-sub" id="reader-sub"></div>
+        </div>
+        <div class="reader-top-actions">
+          <button class="icon-btn" id="reader-bookmark-btn" aria-label="Bookmark page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </button>
+          <button class="icon-btn" id="reader-toc-btn" aria-label="Table of contents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </button>
+          <div class="menu-wrap" id="reader-more-wrap">
+            <button class="icon-btn" id="reader-more-btn" aria-label="More">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            </button>
+            <div class="dropdown hidden" id="reader-more-menu">
+              <button data-sheet="bookmarks">Bookmarks</button>
+              <button data-sheet="highlights">Highlights</button>
+            </div>
+          </div>
+          <button class="icon-btn" id="reader-settings-btn" aria-label="Reader settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="reader-stage"></div>
+      <div class="reader-scrim reader-scrim-top"></div>
+      <div class="reader-scrim reader-scrim-bottom"></div>
+
+      <!-- tap zones for epub pagination (Bindery-style) -->
+      <div class="tap-zones hidden" id="tap-zones">
+        <div id="tap-prev" class="tap-zone"></div>
+        <div id="tap-mid" class="tap-zone tap-mid"></div>
+        <div id="tap-next" class="tap-zone"></div>
+      </div>
+
+      <div class="reader-bottombar" id="reader-bottombar">
+        <span class="reader-pos" id="reader-pos">—</span>
+        <div class="reader-slider-wrap">
+          <input type="range" id="reader-slider" min="0" max="1000" value="0" step="1" />
+        </div>
+        <span class="reader-pos" id="reader-pct">0%</span>
+      </div>
+
+      <!-- selection action bar -->
+      <div id="selection-bar" class="selection-bar hidden">
+        <div class="selection-text" id="selection-text"></div>
+        <div class="hl-colors">
+          <button class="hl-chip" data-color="yellow" aria-label="Yellow highlight"></button>
+          <button class="hl-chip" data-color="green" aria-label="Green highlight"></button>
+          <button class="hl-chip" data-color="blue" aria-label="Blue highlight"></button>
+          <button class="hl-chip" data-color="pink" aria-label="Pink highlight"></button>
+          <button class="hl-chip" data-color="red" aria-label="Red highlight"></button>
+        </div>
+        <button class="icon-btn" id="selection-clear" aria-label="Dismiss">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- resume bar -->
+      <div id="resume-bar" class="resume-bar hidden">
+        <span class="resume-icon">☾</span>
+        <span class="resume-text" id="resume-text"></span>
+        <div class="resume-actions">
+          <button class="btn btn-sm" id="resume-btn">Resume</button>
+          <button class="btn btn-sm btn-ghost" id="restart-btn">Restart</button>
+        </div>
+      </div>
+
+      <!-- sheets -->
+      <div class="sheet-backdrop hidden" id="sheet-backdrop"></div>
+      <div class="sheet hidden" id="sheet"></div>
+    </div>
+
+    <!-- ============ 3D SPOTLIGHT ============ -->
+    <div id="spotlight-modal" class="hidden">
+      <div id="spotlight-canvas-wrap"><canvas id="spotlight-canvas"></canvas></div>
+      <div class="spotlight-meta">
+        <div class="spotlight-title" id="spotlight-title"></div>
+        <div class="spotlight-author" id="spotlight-author"></div>
+        <button class="btn btn-primary btn-lg" id="spotlight-open-btn">Open book</button>
+      </div>
+      <button class="icon-btn spotlight-close" id="spotlight-close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div id="toasts" class="toasts"></div>
+
+    <!-- confirm dialog -->
+    <div id="confirm-modal" class="confirm-modal hidden" role="dialog" aria-modal="true">
+      <div class="confirm-backdrop" id="confirm-backdrop"></div>
+      <div class="confirm-card">
+        <div class="confirm-icon" id="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-.7 14a2 2 0 0 1-2 1.9H7.7a2 2 0 0 1-2-1.9L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </div>
+        <h3 id="confirm-title"></h3>
+        <p id="confirm-desc"></p>
+        <div class="confirm-actions">
+          <button class="btn btn-ghost btn-lg" id="confirm-cancel">Cancel</button>
+          <button class="btn btn-danger btn-lg" id="confirm-ok">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="drop-overlay" class="drop-overlay hidden">
+      <div class="drop-inner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <p>Drop books to add them to your library</p>
+      </div>
+    </div>
+
+    <script src="js/vendor/jszip.min.js"></script>
+    <script src="js/vendor/epub.min.js"></script>
+    <script src="js/vendor/dexie.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
