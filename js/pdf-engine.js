@@ -24,8 +24,7 @@ export class PdfEngine {
 
   async open() {
     try {
-      const data = await this.file.arrayBuffer();
-      this.doc = await pdfjs.getDocument({ data }).promise;
+      this.doc = await pdfjs.getDocument({ data: this.file }).promise;
       if (this.disposed) return;
       this.buildPages();
       this.events.onReady();
