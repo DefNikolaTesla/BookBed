@@ -1,4 +1,4 @@
-const CACHE = "bookbed-v3";
+const CACHE = "bookbed-v5";
 const PRECACHE = [
   "./",
   "./index.html",
