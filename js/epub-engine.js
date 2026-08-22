@@ -85,8 +85,7 @@ export class EpubEngine {
 
   async open() {
     try {
-      const buffer = await this.file.arrayBuffer();
-      this.book = ePub(buffer);
+      this.book = ePub(this.file);
       await this.book.ready;
       await this.createRendition();
       await this.applySettings(this.settings);
