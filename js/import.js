@@ -124,7 +124,7 @@ export async function importBookFile(file) {
     author: meta.author,
     format,
     cover,
-    file,
+    file: arrayBuffer,
     addedAt: Date.now(),
     lastOpenedAt: 0,
   };
